@@ -758,6 +758,7 @@ class vdbconf_view2 : public Dlg
             PopulateInput( proxy_port_rect( r, y ), resize, NETW_PROXY_PORT_ID,
                                 port_of_proxyport( model.get_http_proxy_path() ).c_str(), /* model-connection */
                                 12, INP_COLOR_BG, INP_COLOR_FG, page_id );
+            SetWidgetAlphaMode( NETW_PROXY_PORT_ID, 1 ); /* turn it into numbers only */
         }
 
         // populate the DBGAP page
@@ -787,8 +788,12 @@ class vdbconf_view2 : public Dlg
             y++;
             PopulateRadioBox( pf_cb_rect( r, y ), resize, TOOLS_PREFETCH_ID, CB_COLOR_BG, CB_COLOR_FG, page_id );
             if ( GetWidgetStringCount( TOOLS_PREFETCH_ID ) == 0 )
+            {
                 AddWidgetStringN( TOOLS_PREFETCH_ID, 2,
                                   "public user-repository", "current directory" );
+                bool value = model.does_prefetch_download_to_cache();
+                SetWidgetSelectedString( TOOLS_PREFETCH_ID, value ? 0 : 1 );
+            }
         }
         
         // populate all widgets
@@ -832,6 +837,7 @@ class vdbconf_ctrl2 : public Dlg_Runner
                 case NETW_PROXY_ID      : on_port( dlg, model ); break;
                 case NETW_PROXY_PORT_ID : on_port( dlg, model ); break;                
                 case CACHE_RAM_ID  : model->set_cache_amount_in_MB( dlg.GetWidgetInt64Value( CACHE_RAM_ID ) ); break;
+                case TOOLS_PREFETCH_ID : on_prefetch_dnld( dlg, model ); break;
             }
             return true;
         }
@@ -885,7 +891,6 @@ class vdbconf_ctrl2 : public Dlg_Runner
                 
                 case TOOLS_HDR_ID          : res = dlg.SetActivePage( PAGE_TOOLS ); break;
                 case TOOLS_PREFETCH_LBL_ID : dlg.SetFocus( TOOLS_PREFETCH_ID ); break;
-                //case TOOLS_PREFETCH_ID  : res = on_prefetch_dnld( dlg, model ); break;                
             }
             return res;
         }
@@ -1034,7 +1039,8 @@ class vdbconf_ctrl2 : public Dlg_Runner
         // user has pressed the 'prefetch download to cache' checkbox
         bool on_prefetch_dnld( Dlg &dlg, vdbconf_model *model )
         {
-            model -> set_prefetch_download_to_cache( dlg.GetWidgetBoolValue( TOOLS_PREFETCH_ID ) ); /* model-connection */
+            bool value = ( dlg.GetWidgetSelectedString( TOOLS_PREFETCH_ID ) == 0 );
+            model -> set_prefetch_download_to_cache( value ); /* model-connection */
             return true;
         }
 
